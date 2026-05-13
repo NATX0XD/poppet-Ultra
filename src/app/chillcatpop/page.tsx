@@ -69,8 +69,20 @@ export default function AdminPage() {
         api('/api/game-state'),
         api('/api/admin/players'),
       ]);
-      setGameState({ phase: stateData.phase || 'casual', countdown_until: stateData.countdown_until, round_id: stateData.round_id || 0, last_round_summary: stateData.last_round_summary || null });
-      setPlayers(playersData.players || []);
+      const nextState = {
+        phase: stateData.phase || 'casual',
+        countdown_until: stateData.countdown_until,
+        round_id: stateData.round_id || 0,
+        last_round_summary: stateData.last_round_summary || null,
+      };
+      setGameState(prev => (
+        prev.phase === nextState.phase &&
+        prev.countdown_until === nextState.countdown_until &&
+        prev.round_id === nextState.round_id &&
+        JSON.stringify(prev.last_round_summary) === JSON.stringify(nextState.last_round_summary)
+      ) ? prev : nextState);
+      const nextPlayers = playersData.players || [];
+      setPlayers(prev => JSON.stringify(prev) === JSON.stringify(nextPlayers) ? prev : nextPlayers);
       setIsLoggedIn(true);
     } catch (e: any) {
       if (e.status === 401) setIsLoggedIn(false);

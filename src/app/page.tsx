@@ -10,7 +10,7 @@ const DISPLAY_CPS_MAX = 40;
 const SOUND_TARGET_VOLUME = 0.85;
 const MAX_POP_POOL = 24;
 const LEADERBOARD_POLL_MS = 1000;
-const GAME_STATE_POLL_MS = 500;
+const GAME_STATE_POLL_MS = 1000;
 const SCORE_SYNC_POLL_MS = 750;
 
 const NONE_EFFECT_OVERRIDES: Record<number, string> = {
@@ -366,11 +366,16 @@ export default function PopcatGame() {
     try {
       const response = await fetch('/api/game-state');
       const state = await response.json();
-      setGameState({
+      const nextState = {
         phase: state.phase || 'casual',
         countdown_until: state.countdown_until ? Number(state.countdown_until) : null,
         last_round_summary: state.last_round_summary || null,
-      });
+      };
+      setGameState((prev: typeof gameState) => (
+        prev.phase === nextState.phase &&
+        prev.countdown_until === nextState.countdown_until &&
+        JSON.stringify(prev.last_round_summary) === JSON.stringify(nextState.last_round_summary)
+      ) ? prev : nextState);
     } catch (e) {
       console.error('Fetch game state failed:', e);
     }
@@ -380,7 +385,8 @@ export default function PopcatGame() {
     try {
       const response = await fetch('/api/leaderboard');
       const data = await response.json();
-      setLeaderboard(Array.isArray(data) ? data.slice(0, 3) : []);
+      const nextLeaderboard = Array.isArray(data) ? data.slice(0, 3) : [];
+      setLeaderboard((prev: typeof leaderboard) => JSON.stringify(prev) === JSON.stringify(nextLeaderboard) ? prev : nextLeaderboard);
     } catch (e) {
       console.error('Fetch leaderboard failed:', e);
     }
