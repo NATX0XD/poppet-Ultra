@@ -9,6 +9,9 @@ const SKIN_STORAGE_KEY = 'popcat_selected_skin';
 const DISPLAY_CPS_MAX = 40;
 const SOUND_TARGET_VOLUME = 0.85;
 const MAX_POP_POOL = 24;
+const LEADERBOARD_POLL_MS = 1000;
+const GAME_STATE_POLL_MS = 500;
+const SCORE_SYNC_POLL_MS = 750;
 
 const NONE_EFFECT_OVERRIDES: Record<number, string> = {
   15: 'cat-pup-none-effect15.png',
@@ -98,6 +101,8 @@ export default function PopcatGame() {
   const clickAudioLoadingRef = useRef<Promise<AudioBuffer | null> | null>(null);
   const popClickSoundsRef = useRef<HTMLAudioElement[]>([]);
   const popSoundIndexRef = useRef(0);
+  const syncInFlightRef = useRef(false);
+  const pendingSyncScoreRef = useRef<number | null>(null);
 
   const chillSoundRef = useRef<HTMLAudioElement | null>(null);
   const catupSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -200,11 +205,11 @@ export default function PopcatGame() {
     fetchGameState();
 
     // Intervals
-    const leaderboardInterval = setInterval(fetchLeaderboard, 3000);
-    const gameStateInterval = setInterval(fetchGameState, 1000);
+    const leaderboardInterval = setInterval(fetchLeaderboard, LEADERBOARD_POLL_MS);
+    const gameStateInterval = setInterval(fetchGameState, GAME_STATE_POLL_MS);
     const syncInterval = setInterval(() => {
       if (usernameRef.current) syncScore(countRef.current);
-    }, 5000);
+    }, SCORE_SYNC_POLL_MS);
 
     // CPS Loop
     const cpsInterval = setInterval(() => {
@@ -384,6 +389,12 @@ export default function PopcatGame() {
   const syncScore = async (val: number) => {
     if (!usernameRef.current) return;
     if (gameStateRef.current.phase === 'summary' && !hidePodiumRef.current) return;
+    if (syncInFlightRef.current) {
+      pendingSyncScoreRef.current = val;
+      return;
+    }
+
+    syncInFlightRef.current = true;
     try {
       const response = await fetch('/api/sync', {
         method: 'POST',
@@ -412,6 +423,15 @@ export default function PopcatGame() {
       }
     } catch (e) {
       console.error('Sync failed:', e);
+    } finally {
+      syncInFlightRef.current = false;
+      const pending = pendingSyncScoreRef.current;
+      if (pending !== null && pending !== val) {
+        pendingSyncScoreRef.current = null;
+        void syncScore(pending);
+      } else {
+        pendingSyncScoreRef.current = null;
+      }
     }
   };
 

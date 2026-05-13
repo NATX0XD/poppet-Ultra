@@ -79,7 +79,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     refresh();
-    const t1 = setInterval(refresh, 2000);
+    const t1 = setInterval(refresh, 1000);
     const t2 = setInterval(() => setNow(Date.now()), 500);
     return () => { clearInterval(t1); clearInterval(t2); };
   }, [refresh]);
