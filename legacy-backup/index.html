@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Popcat Ultra Disco Edition</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="app-body">
+    <div id="scene-fog" aria-hidden="true"></div>
+    <video id="super-elit-video" class="scene-video hidden" src="assent/superElit.mp4" preload="auto" playsinline loop></video>
+    <!-- Name Entry Modal -->
+    <div id="name-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Enter Your Nickname</h2>
+            <input type="text" id="username-input" placeholder="Your Name...">
+            <button id="start-btn">START POPPING!</button>
+        </div>
+    </div>
+
+    <!-- Leaderboard UI -->
+    <div id="leaderboard-panel">
+        <h3>🏆 TOP 3</h3>
+        <div id="leaderboard-list">
+            <!-- Items injected by JS -->
+        </div>
+        <details id="user-rank-details">
+            <summary>ดูอันดับของฉัน</summary>
+            <div class="rank-details-body">
+                <div id="user-rank">Your Rank: --</div>
+                <div id="user-score">Your Score: --</div>
+            </div>
+        </details>
+    </div>
+
+    <button id="skin-drawer-toggle" class="skin-drawer-toggle" type="button" aria-controls="skin-drawer" aria-expanded="false">
+        🎭 Skin
+    </button>
+    <div id="skin-drawer-backdrop" class="skin-drawer-backdrop hidden" aria-hidden="true"></div>
+    <aside id="skin-drawer" class="skin-drawer hidden" aria-hidden="true">
+        <div class="skin-drawer-header">
+            <div>
+                <p class="skin-drawer-kicker">Character Select</p>
+                <h3>เลือก skin ของแมว</h3>
+                <p>เลือกเลขที่ต้องการ จากนั้นภาพ normal จะใช้ none-effect และถ้า CPS &gt; 8 ต่อเนื่อง 3 วินาทีจะสลับเป็น effect.</p>
+            </div>
+            <button id="skin-drawer-close" class="skin-drawer-close" type="button" aria-label="Close skin drawer">×</button>
+        </div>
+        <div class="skin-drawer-actions">
+            <button type="button" class="skin-card skin-card-default active" data-skin-id="default">
+                <img src="assent/popcat%20Costume/p.png" alt="Original Popcat">
+                <span>Original</span>
+                <small>op / p</small>
+            </button>
+            <div id="skin-grid" class="skin-grid" role="group" aria-label="เลือก skin number"></div>
+        </div>
+    </aside>
+
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search for countries...">
+        <div id="search-results" class="hidden">
+            <div id="no-results-content">
+                <img id="confused-cat" src="cat_close.png">
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <div class="question-mark">?</div>
+                <p>No results found for "<span id="search-query"></span>"</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-state-overlay" class="hidden">
+        <div id="game-state-card">
+            <div id="game-state-label">Waiting for admin...</div>
+            <div id="countdown-value">0</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 id="counter">0</h1>
+        <div id="cps-display">CPS: 0.0</div>
+        
+        <div class="cat-container">
+            <img id="cat-img" src="assent/popcat%20Costume/p.png" alt="Popcat" draggable="false">
+        </div>
+        
+        <!-- Chill Guy Character - Moved to Bottom Right -->
+        <div id="chill-guy-container" class="chill-hidden">
+            <div id="speech-bubble">กดเบาๆ เพื่อน... เมาส์จะพังแล้ว</div>
+            <img id="chill-guy-img" src="chill_guy_png.png" alt="Chill Guy">
+        </div>
+
+        <div id="chill-guy-container-left" class="chill-hidden">
+            <div id="speech-bubble-left">กดเบาๆ เพื่อน... เมาส์จะพังแล้ว</div>
+            <img id="chill-guy-img-left" src="chill_guy_png.png" alt="Chill Guy Left">
+        </div>
+
+        <div id="message" class="hidden">GO CRAZY!!! 🌈✨</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

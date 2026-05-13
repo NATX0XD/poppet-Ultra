@@ -1,0 +1,26 @@
+{
+  "phase": "summary",
+  "countdown_until": null,
+  "start_at": 1778676692993,
+  "round_id": 4,
+  "round_started_at": 1778676692993,
+  "round_ended_at": 1778676732589,
+  "round_start_scores": {},
+  "last_round_summary": {
+    "total_players": 1,
+    "total_points": 756,
+    "players": [
+      {
+        "name": "kjl\\",
+        "score": 756
+      }
+    ],
+    "top3": [
+      {
+        "name": "kjl\\",
+        "score": 756,
+        "skin": "default"
+      }
+    ]
+  }
+}
