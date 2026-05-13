@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'bad request' }, { status: 400 });
     }
     const state = await loadState();
-    if (state.phase !== 'casual' && state.phase !== 'competitive') {
+    if (state.phase !== 'casual' && state.phase !== 'competitive' && state.phase !== 'ending') {
       return NextResponse.json({
         status: 'round_transition',
         reset_local: true,
