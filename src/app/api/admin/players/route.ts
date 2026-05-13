@@ -8,9 +8,11 @@ export async function GET(req: NextRequest) {
   if (!isAdmin(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-  const items = getLeaderboardItems();
-  const skins = getPlayerSkins();
-  const state = loadState();
+  const [items, skins, state] = await Promise.all([
+    getLeaderboardItems(),
+    getPlayerSkins(),
+    loadState(),
+  ]);
   const startScores = state.round_start_scores || {};
 
   const players = items.map(([name, score], idx) => ({

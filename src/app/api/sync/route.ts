@@ -8,9 +8,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'bad request' }, { status: 400 });
     }
     if (skinId) {
-      saveSkin(username, skinId);
+      await saveSkin(username, skinId);
     }
-    const result = saveScore(username, score);
+    const result = await saveScore(username, score);
     if (typeof result === 'object' && result !== null && 'error' in result) {
       return NextResponse.json({ 
         status: 'failed', 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       });
     }
     return NextResponse.json({ status: 'success', rank: result });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 }

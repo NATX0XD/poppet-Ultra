@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
-import { loadState, setGameState, buildRoundSummary, getLeaderboardMap } from '@/lib/db';
+import { setGameState } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
@@ -14,13 +14,13 @@ export async function POST(req: NextRequest) {
 
     const countdownUntil = Date.now() + delaySeconds * 1000;
 
-    const stoppedState = setGameState({
+    const stoppedState = await setGameState({
       phase: 'ending',
       countdown_until: countdownUntil,
     });
 
     return NextResponse.json(stoppedState);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 }

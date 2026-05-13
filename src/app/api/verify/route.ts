@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     if (!username || typeof username !== 'string') {
       return NextResponse.json({ valid: false });
     }
-    const db = getLeaderboardMap();
+    const db = await getLeaderboardMap();
     // Player exists if they are in the DB (even with score 0 from registration)
     const exists = username in db;
     return NextResponse.json({ valid: exists });

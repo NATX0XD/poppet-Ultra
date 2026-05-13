@@ -7,6 +7,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   
-  resetAllScores();
+  await resetAllScores();
   return NextResponse.json({ status: 'ok' });
 }

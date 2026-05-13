@@ -11,9 +11,9 @@ export async function POST(req: NextRequest) {
     if (!username) {
       return NextResponse.json({ error: 'bad request' }, { status: 400 });
     }
-    deletePlayer(username);
+    await deletePlayer(username);
     return NextResponse.json({ status: 'ok' });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 }

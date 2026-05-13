@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/auth';
-import { loadState, setGameState, getLeaderboardMap, resetAllScores } from '@/lib/db';
+import { loadState, setGameState, resetAllScores } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   if (!isAdmin(req)) {
@@ -12,11 +12,11 @@ export async function POST(req: NextRequest) {
     delaySeconds = Math.max(0, Number(delaySeconds) || 5);
 
     const countdownUntil = Date.now() + delaySeconds * 1000;
-    const currentState = loadState();
+    const currentState = await loadState();
 
-    resetAllScores(); // Wipe casual scores
+    await resetAllScores(); // Wipe casual scores
 
-    const newState = setGameState({
+    const newState = await setGameState({
       phase: 'starting',
       countdown_until: countdownUntil,
       start_at: null,
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(newState);
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'bad request' }, { status: 400 });
   }
 }

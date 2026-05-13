@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeaderboardMap, saveJson, loadJson } from '@/lib/db';
-import path from 'path';
-
-const DB_FILE = path.join(process.cwd(), 'leaderboard.json');
+import { registerPlayer } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,16 +11,9 @@ export async function POST(req: NextRequest) {
     }
 
     const safeUsername = username.trim();
-    const data = loadJson<Record<string, number>>(DB_FILE, {});
-
-    // If player already exists, that's fine, they are registered
-    if (!(safeUsername in data)) {
-      data[safeUsername] = 0;
-      saveJson(DB_FILE, data);
-    }
-
+    await registerPlayer(safeUsername);
     return NextResponse.json({ success: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ success: false, message: 'การลงทะเบียนล้มเหลว' });
   }
 }
