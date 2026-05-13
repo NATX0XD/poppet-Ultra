@@ -14,8 +14,6 @@ export async function POST(req: NextRequest) {
     const countdownUntil = Date.now() + delaySeconds * 1000;
     const currentState = await loadState();
 
-    await resetAllScores(); // Wipe casual scores
-
     const newState = await setGameState({
       phase: 'starting',
       countdown_until: countdownUntil,
@@ -26,6 +24,7 @@ export async function POST(req: NextRequest) {
       round_start_scores: {}, // Since everyone starts from 0
       last_round_summary: null,
     });
+    await resetAllScores(); // Wipe casual scores after entering starting to block stale syncs
 
     return NextResponse.json(newState);
   } catch {

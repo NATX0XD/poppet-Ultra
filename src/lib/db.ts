@@ -8,6 +8,7 @@ const SKINS_FILE = path.join(process.cwd(), 'skins.json');
 const LEADERBOARD_KEY = 'popcat:leaderboard';
 const STATE_KEY = 'popcat:game-state';
 const SKINS_KEY = 'popcat:skins';
+const SUMMARY_PODIUM_MS = 12000;
 
 const memoryJsonStore = new Map<string, unknown>();
 const runtimeJsonDir = path.join('/tmp', 'popcat-data');
@@ -261,7 +262,7 @@ export async function loadState(): Promise<GameState> {
       } else if (state.phase === 'ending') {
         state.phase = 'summary';
         state.round_ended_at = countdown;
-        state.countdown_until = null;
+        state.countdown_until = nowMs + SUMMARY_PODIUM_MS;
         state.last_round_summary = await buildRoundSummary(state.round_start_scores);
         const clearedScores = await readLeaderboardData();
         for (const key of Object.keys(clearedScores)) {
@@ -269,6 +270,12 @@ export async function loadState(): Promise<GameState> {
         }
         await writeLeaderboardData(clearedScores);
         lastSyncMap.clear();
+        changed = true;
+      } else if (state.phase === 'summary') {
+        state.phase = 'casual';
+        state.countdown_until = null;
+        state.start_at = null;
+        state.round_started_at = null;
         changed = true;
       }
     }

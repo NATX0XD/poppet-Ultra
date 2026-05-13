@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveScore, saveSkin } from '@/lib/db';
+import { loadState, saveScore, saveSkin } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
     const { username, score, skinId } = await req.json();
     if (!username || typeof score !== 'number') {
       return NextResponse.json({ error: 'bad request' }, { status: 400 });
+    }
+    const state = await loadState();
+    if (state.phase !== 'casual' && state.phase !== 'competitive') {
+      return NextResponse.json({
+        status: 'round_transition',
+        reset_local: true,
+      });
     }
     if (skinId) {
       await saveSkin(username, skinId);

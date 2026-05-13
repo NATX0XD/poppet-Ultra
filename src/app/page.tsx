@@ -418,8 +418,7 @@ export default function PopcatGame() {
 
   const syncScore = async (val: number) => {
     if (!usernameRef.current) return;
-    const canPracticeInHiddenSummary = gameStateRef.current.phase === 'summary' && hidePodiumRef.current;
-    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive' && !canPracticeInHiddenSummary) return;
+    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive') return;
     if (syncInFlightRef.current) {
       pendingSyncScoreRef.current = val;
       return;
@@ -437,6 +436,12 @@ export default function PopcatGame() {
         })
       });
       const result = await response.json();
+      if (result.reset_local) {
+        setCount(0);
+        setLeaderboard([]);
+        setUserRank(null);
+        return;
+      }
       if (result.wipe_local) {
         setCount(0);
         setUsername('');
