@@ -13,6 +13,7 @@ const LEADERBOARD_POLL_MS = 1000;
 const GAME_STATE_POLL_MS = 1000;
 const SCORE_SYNC_POLL_MS = 750;
 const CLOCK_TICK_MS = 200;
+const SUMMARY_PODIUM_MS = 12000;
 
 const NONE_EFFECT_OVERRIDES: Record<number, string> = {
   15: 'cat-pup-none-effect15.png',
@@ -322,6 +323,7 @@ export default function PopcatGame() {
   useEffect(() => {
     const prev = prevPhaseRef.current;
     const curr = gameState.phase;
+    let podiumTimer: ReturnType<typeof setTimeout> | null = null;
 
     if (curr === 'starting') {
       setCount(0);
@@ -339,9 +341,17 @@ export default function PopcatGame() {
     // Only show podium if we just transitioned to summary (not on fresh load)
     if (curr === 'summary' && prev === 'ending') {
       setHidePodium(false);
+      podiumTimer = setTimeout(() => {
+        setHidePodium(true);
+      }, SUMMARY_PODIUM_MS);
     }
 
     prevPhaseRef.current = curr;
+    return () => {
+      if (podiumTimer) {
+        clearTimeout(podiumTimer);
+      }
+    };
   }, [gameState.phase]);
 
   // Setup quote intervals
@@ -408,7 +418,8 @@ export default function PopcatGame() {
 
   const syncScore = async (val: number) => {
     if (!usernameRef.current) return;
-    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive') return;
+    const canPracticeInHiddenSummary = gameStateRef.current.phase === 'summary' && hidePodiumRef.current;
+    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive' && !canPracticeInHiddenSummary) return;
     if (syncInFlightRef.current) {
       pendingSyncScoreRef.current = val;
       return;
@@ -817,7 +828,8 @@ export default function PopcatGame() {
       return;
     }
     if (!usernameRef.current) return;
-    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive') return;
+    const canPracticeInHiddenSummary = gameStateRef.current.phase === 'summary' && hidePodiumRef.current;
+    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive' && !canPracticeInHiddenSummary) return;
 
     if (e?.target) {
       const target = e.target as HTMLElement;
