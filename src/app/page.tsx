@@ -480,7 +480,7 @@ export default function PopcatGame() {
 
   const playClickPopSound = () => {
     const ctx = ensureClickAudioContext();
-    if (ctx && clickAudioBufferRef.current) {
+    if (ctx && ctx.state === 'running' && clickAudioBufferRef.current) {
       try {
         const source = ctx.createBufferSource();
         source.buffer = clickAudioBufferRef.current;
@@ -499,8 +499,21 @@ export default function PopcatGame() {
     }
     try {
       const snd = acquirePopClickSound();
+      snd.preload = 'auto';
       snd.currentTime = 0;
-      snd.play().catch(() => {});
+      const playPromise = snd.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          try {
+            const fallback = new Audio('/assent/sound/pop.mp3');
+            fallback.preload = 'auto';
+            fallback.volume = 1;
+            fallback.play().catch(() => {});
+          } catch (e) {
+            console.log('Sound fallback failed', e);
+          }
+        });
+      }
     } catch (e) {
       console.log('Sound play failed', e);
     }
