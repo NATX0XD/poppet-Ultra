@@ -959,6 +959,40 @@ export default function PopcatGame() {
             overflow: hidden;
         }
 
+        .game-root,
+        .game-root * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .game-root ::selection {
+            background: transparent;
+            color: inherit;
+        }
+
+        .game-root input,
+        .game-root textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
+
+        .game-root img {
+            -webkit-user-drag: none;
+            user-drag: none;
+        }
+
+        .game-root button,
+        .game-root summary,
+        .game-root details {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
         #scene-fog {
             position: absolute;
             inset: 0;
@@ -1793,6 +1827,9 @@ export default function PopcatGame() {
         }}
         onMouseDown={(e) => {
           if (e.button === 0) handlePop(e);
+        }}
+        onDragStart={(e) => {
+          e.preventDefault();
         }}
         onTouchStart={(e) => {
           // Restore interactive state check (without deprecated .running)
