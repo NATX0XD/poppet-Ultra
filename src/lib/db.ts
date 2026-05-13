@@ -263,6 +263,12 @@ export async function loadState(): Promise<GameState> {
         state.round_ended_at = countdown;
         state.countdown_until = null;
         state.last_round_summary = await buildRoundSummary(state.round_start_scores);
+        const clearedScores = await readLeaderboardData();
+        for (const key of Object.keys(clearedScores)) {
+          clearedScores[key] = 0;
+        }
+        await writeLeaderboardData(clearedScores);
+        lastSyncMap.clear();
         changed = true;
       }
     }

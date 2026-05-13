@@ -12,6 +12,7 @@ const MAX_POP_POOL = 24;
 const LEADERBOARD_POLL_MS = 1000;
 const GAME_STATE_POLL_MS = 1000;
 const SCORE_SYNC_POLL_MS = 750;
+const CLOCK_TICK_MS = 200;
 
 const NONE_EFFECT_OVERRIDES: Record<number, string> = {
   15: 'cat-pup-none-effect15.png',
@@ -82,6 +83,7 @@ export default function PopcatGame() {
   const [isShaking, setIsShaking] = useState(false);
   const [message, setMessage] = useState('');
   const [messageVisible, setMessageVisible] = useState(false);
+  const [clockNow, setClockNow] = useState(Date.now());
 
   const [showChillGuy, setShowChillGuy] = useState(false);
   const [showChillGuyLeft, setShowChillGuyLeft] = useState(false);
@@ -210,6 +212,9 @@ export default function PopcatGame() {
     const syncInterval = setInterval(() => {
       if (usernameRef.current) syncScore(countRef.current);
     }, SCORE_SYNC_POLL_MS);
+    const clockInterval = setInterval(() => {
+      setClockNow(Date.now());
+    }, CLOCK_TICK_MS);
 
     // CPS Loop
     const cpsInterval = setInterval(() => {
@@ -261,6 +266,7 @@ export default function PopcatGame() {
       clearInterval(leaderboardInterval);
       clearInterval(gameStateInterval);
       clearInterval(syncInterval);
+      clearInterval(clockInterval);
       clearInterval(cpsInterval);
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
@@ -322,6 +328,12 @@ export default function PopcatGame() {
       setLeaderboard([]);
       setUserRank(null);
       setHidePodium(true); // Hide old podium when new round starts
+    }
+
+    if (curr === 'summary') {
+      setCount(0);
+      setLeaderboard([]);
+      setUserRank(null);
     }
 
     // Only show podium if we just transitioned to summary (not on fresh load)
@@ -396,7 +408,7 @@ export default function PopcatGame() {
 
   const syncScore = async (val: number) => {
     if (!usernameRef.current) return;
-    if (gameStateRef.current.phase === 'summary' && !hidePodiumRef.current) return;
+    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive') return;
     if (syncInFlightRef.current) {
       pendingSyncScoreRef.current = val;
       return;
@@ -805,7 +817,7 @@ export default function PopcatGame() {
       return;
     }
     if (!usernameRef.current) return;
-    if (gameStateRef.current.phase === 'summary' && !hidePodiumRef.current) return;
+    if (gameStateRef.current.phase !== 'casual' && gameStateRef.current.phase !== 'competitive') return;
 
     if (e?.target) {
       const target = e.target as HTMLElement;
@@ -896,13 +908,13 @@ export default function PopcatGame() {
     return { filter };
   };
 
-  const isStartingOverlayVisible = gameState.phase === 'starting' && gameState.countdown_until !== null && Date.now() < gameState.countdown_until;
-  const isEndingOverlayVisible = gameState.phase === 'ending' && gameState.countdown_until !== null && Date.now() < gameState.countdown_until;
+  const isStartingOverlayVisible = gameState.phase === 'starting' && gameState.countdown_until !== null && clockNow < gameState.countdown_until;
+  const isEndingOverlayVisible = gameState.phase === 'ending' && gameState.countdown_until !== null && clockNow < gameState.countdown_until;
   const isSummaryVisible = gameState.phase === 'summary' && !hidePodium;
 
   const getCountdownDisplay = () => {
-    if (gameState.countdown_until && Date.now() < gameState.countdown_until) {
-      return Math.max(0, Math.ceil((gameState.countdown_until - Date.now()) / 1000));
+    if (gameState.countdown_until && clockNow < gameState.countdown_until) {
+      return Math.max(0, Math.ceil((gameState.countdown_until - clockNow) / 1000));
     }
     return '...';
   };
