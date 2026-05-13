@@ -319,6 +319,8 @@ export default function PopcatGame() {
 
     if (curr === 'starting') {
       setCount(0);
+      setLeaderboard([]);
+      setUserRank(null);
       setHidePodium(true); // Hide old podium when new round starts
     }
 
