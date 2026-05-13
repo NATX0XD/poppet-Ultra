@@ -5,11 +5,19 @@ const DB_FILE = path.join(process.cwd(), 'leaderboard.json');
 const STATE_FILE = path.join(process.cwd(), 'game_state.json');
 
 const SKINS_FILE = path.join(process.cwd(), 'skins.json');
+const memoryJsonStore = new Map<string, unknown>();
 
 export const ADMIN_SESSION = 'popcat_admin_session_token'; // Simple session token for demo
 export const ADMIN_PASSWORD = process.env.POPCAT_ADMIN_PASSWORD || '@TCT_KMUTNB#PopCat_Ops^2026!';
 
 export type GamePhase = 'casual' | 'starting' | 'competitive' | 'ending' | 'summary';
+
+export interface RoundSummary {
+  total_players: number;
+  total_points: number;
+  players: { name: string; score: number }[];
+  top3: { name: string; score: number; skin: string }[];
+}
 
 export interface GameState {
   phase: GamePhase;
@@ -19,7 +27,7 @@ export interface GameState {
   round_started_at: number | null;
   round_ended_at: number | null;
   round_start_scores: Record<string, number>;
-  last_round_summary: any;
+  last_round_summary: RoundSummary | null;
 }
 
 const DEFAULT_STATE: GameState = {
@@ -34,20 +42,39 @@ const DEFAULT_STATE: GameState = {
 };
 
 export function loadJson<T>(filePath: string, defaultValue: T): T {
+  if (memoryJsonStore.has(filePath)) {
+    return memoryJsonStore.get(filePath) as T;
+  }
+
   try {
     if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
+      try {
+        fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
+      } catch {
+        memoryJsonStore.set(filePath, defaultValue);
+        return defaultValue;
+      }
       return defaultValue;
     }
     const data = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch (e) {
+    const parsed = JSON.parse(data);
+    memoryJsonStore.set(filePath, parsed);
+    return parsed;
+  } catch {
+    if (memoryJsonStore.has(filePath)) {
+      return memoryJsonStore.get(filePath) as T;
+    }
     return defaultValue;
   }
 }
 
-export function saveJson(filePath: string, data: any) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+export function saveJson(filePath: string, data: unknown) {
+  memoryJsonStore.set(filePath, data);
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch {
+    // Deploy targets with read-only project directories still keep the live runtime state.
+  }
 }
 
 export function saveSkin(username: string, skinId: string) {
@@ -67,10 +94,11 @@ export function loadState(): GameState {
 
   // Backward compatibility: If it has 'running' from old state, convert it to phase
   if ('running' in state) {
-    if ((state as any).running && state.phase === 'casual') {
+    const legacyState = state as GameState & { running?: boolean };
+    if (legacyState.running && state.phase === 'casual') {
       state.phase = 'competitive';
     }
-    delete (state as any).running;
+    delete legacyState.running;
     changed = true;
   }
 
