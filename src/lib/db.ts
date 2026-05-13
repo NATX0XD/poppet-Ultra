@@ -6,6 +6,15 @@ const STATE_FILE = path.join(process.cwd(), 'game_state.json');
 
 const SKINS_FILE = path.join(process.cwd(), 'skins.json');
 const memoryJsonStore = new Map<string, unknown>();
+const runtimeJsonDir = path.join('/tmp', 'popcat-data');
+const mutableJsonFiles = new Set([DB_FILE, STATE_FILE, SKINS_FILE]);
+
+function getRuntimeJsonPath(filePath: string) {
+  if (!mutableJsonFiles.has(filePath)) {
+    return filePath;
+  }
+  return path.join(runtimeJsonDir, path.basename(filePath));
+}
 
 export const ADMIN_SESSION = 'popcat_admin_session_token'; // Simple session token for demo
 export const ADMIN_PASSWORD = process.env.POPCAT_ADMIN_PASSWORD || '@TCT_KMUTNB#PopCat_Ops^2026!';
@@ -42,38 +51,64 @@ const DEFAULT_STATE: GameState = {
 };
 
 export function loadJson<T>(filePath: string, defaultValue: T): T {
+  const runtimePath = getRuntimeJsonPath(filePath);
+  if (memoryJsonStore.has(runtimePath)) {
+    return memoryJsonStore.get(runtimePath) as T;
+  }
   if (memoryJsonStore.has(filePath)) {
     return memoryJsonStore.get(filePath) as T;
   }
 
   try {
-    if (!fs.existsSync(filePath)) {
+    if (fs.existsSync(runtimePath)) {
+      const data = fs.readFileSync(runtimePath, 'utf-8');
+      const parsed = JSON.parse(data);
+      memoryJsonStore.set(runtimePath, parsed);
+      memoryJsonStore.set(filePath, parsed);
+      return parsed;
+    }
+
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(data);
+      memoryJsonStore.set(runtimePath, parsed);
+      memoryJsonStore.set(filePath, parsed);
       try {
-        fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), 'utf-8');
+        fs.mkdirSync(path.dirname(runtimePath), { recursive: true });
+        fs.writeFileSync(runtimePath, JSON.stringify(parsed, null, 2), 'utf-8');
       } catch {
-        memoryJsonStore.set(filePath, defaultValue);
-        return defaultValue;
+        // Runtime path is best-effort; fallback remains in-memory.
       }
-      return defaultValue;
+      return parsed;
     }
-    const data = fs.readFileSync(filePath, 'utf-8');
-    const parsed = JSON.parse(data);
-    memoryJsonStore.set(filePath, parsed);
-    return parsed;
-  } catch {
-    if (memoryJsonStore.has(filePath)) {
-      return memoryJsonStore.get(filePath) as T;
-    }
-    return defaultValue;
-  }
+  } catch {}
+
+  memoryJsonStore.set(runtimePath, defaultValue);
+  memoryJsonStore.set(filePath, defaultValue);
+  return defaultValue;
+}
+
+function writeJsonFile(filePath: string, data: unknown) {
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export function saveJson(filePath: string, data: unknown) {
+  const runtimePath = getRuntimeJsonPath(filePath);
+  memoryJsonStore.set(runtimePath, data);
   memoryJsonStore.set(filePath, data);
+
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    writeJsonFile(runtimePath, data);
   } catch {
     // Deploy targets with read-only project directories still keep the live runtime state.
+  }
+  try {
+    if (runtimePath !== filePath) {
+      writeJsonFile(filePath, data);
+    }
+  } catch {
+    // Best-effort only; the runtime copy already carries the current state.
   }
 }
 
